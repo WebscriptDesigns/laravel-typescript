@@ -192,7 +192,7 @@ class ModelGenerator extends AbstractGenerator
             Types::SMALLINT => TypeScriptType::NUMBER,
             Types::STRING => TypeScriptType::STRING,
             Types::TEXT => TypeScriptType::STRING,
-            Types::TIME_MUTABLE => TypeScriptType::NUMBER,
+            Types::TIME_MUTABLE => TypeScriptType::STRING,
             Types::TIME_IMMUTABLE => TypeScriptType::NUMBER,
             default => TypeScriptType::ANY,
         };
