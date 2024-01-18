@@ -17,6 +17,7 @@ class TypeScriptGenerateCommand extends Command
             generators: config('typescript.generators', []),
             paths: config('typescript.paths', []),
             output: config('typescript.output', resource_path('js/models.d.ts')),
+            enumsOutput: config('typescript.enumsOutput', resource_path('js/enums.ts')),
             autoloadDev: config('typescript.autoloadDev', false),
         );
 

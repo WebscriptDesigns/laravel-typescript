@@ -16,6 +16,7 @@ class TypeScriptGenerator
     public function __construct(
         public array $generators,
         public string $output,
+        public string $enumsOutput,
         public bool $autoloadDev,
         public array $paths = []
     ) {
@@ -57,7 +58,7 @@ class TypeScriptGenerator
             )
             ->join(PHP_EOL);
 
-        file_put_contents('js/enums.ts', $enums);
+        file_put_contents($this->enumsOutput, $enums);
     }
 
     protected function makeNamespace(string $namespace, Collection $reflections): string

@@ -19,5 +19,7 @@ return [
 
     'output' => resource_path('js/models.d.ts'),
 
+    'enumsOutput' => resource_path('js/enums.ts'),
+
     'autoloadDev' => false,
 ];
