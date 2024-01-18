@@ -2,9 +2,11 @@
 
 namespace Based\TypeScript;
 
+use Based\TypeScript\Generators\EnumGenerator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionClass;
+use ReflectionEnum;
 use ReflectionException;
 use SplFileInfo;
 use Symfony\Component\Finder\Finder;
@@ -38,6 +40,24 @@ class TypeScriptGenerator
             ->join(PHP_EOL);
 
         file_put_contents($this->output, $types);
+
+        $enums = $this->phpEnums()
+            ->groupBy(fn (ReflectionEnum $reflection) => $reflection->getNamespaceName())
+            ->map(fn (Collection $reflections, string $namespace) => $this->makeEnums($namespace, $reflections))
+            ->reject(fn (string $namespaceDefinition) => empty($namespaceDefinition))
+            ->prepend(
+                <<<END
+                /**
+                 * This file is auto generated using 'php artisan typescript:generate'
+                 *
+                 * Changes to this file will be lost when the command is run again
+                 */
+
+                END
+            )
+            ->join(PHP_EOL);
+
+        file_put_contents('js/enums.ts', $enums);
     }
 
     protected function makeNamespace(string $namespace, Collection $reflections): string
@@ -49,6 +69,14 @@ class TypeScriptGenerator
 
                 return $definitions->prepend("declare namespace {$tsNamespace} {")->push('}' . PHP_EOL);
             })
+            ->join(PHP_EOL);
+    }
+
+    protected function makeEnums(string $namespace, Collection $reflections): string
+    {
+        return $reflections->map(fn (ReflectionEnum $reflection) => (new EnumGenerator)->generate($reflection))
+            ->whereNotNull()
+            ->whenNotEmpty(fn (Collection $definitions) => $definitions->prepend("declare namespace App.Enums {")->push('}' . PHP_EOL))
             ->join(PHP_EOL);
     }
 
@@ -96,7 +124,33 @@ class TypeScriptGenerator
                         }
                     })
                     ->map(fn (string $className) => new ReflectionClass($className))
-                    ->reject(fn (ReflectionClass $reflection) => $reflection->isAbstract())
+                    ->reject(fn (ReflectionClass $reflection) => $reflection->isAbstract() || $reflection->isEnum())
+                    ->values();
+            });
+    }
+
+    protected function phpEnums(): Collection
+    {
+        $composer = json_decode(file_get_contents(realpath('composer.json')));
+
+        return collect($composer->autoload->{'psr-4'})
+            ->when($this->autoloadDev, function (Collection $paths) use ($composer) {
+                return $paths->merge(
+                    collect($composer->{'autoload-dev'}?->{'psr-4'})
+                );
+            })
+            ->merge($this->paths)
+            ->flatMap(function (string $path, string $namespace) {
+                return collect((new Finder)->in($path)->name('*.php')->files())
+                    ->map(function (SplFileInfo $file) use ($path, $namespace) {
+                        return $namespace . str_replace(
+                            ['/', '.php'],
+                            ['\\', ''],
+                            Str::after($file->getRealPath(), realpath($path) . DIRECTORY_SEPARATOR)
+                        );
+                    })
+                    ->filter(fn (string $enumName) => enum_exists($enumName))
+                    ->map(fn (string $enumName) => new ReflectionEnum($enumName))
                     ->values();
             });
     }
