@@ -21,7 +21,7 @@ class EnumGenerator extends AbstractGenerator
             $this->getCases(),
         ])
             ->filter(fn (string $part) => !empty($part))
-            ->join(PHP_EOL . '        ');
+            ->join(PHP_EOL . '    ');
     }
 
     /**
@@ -41,6 +41,6 @@ class EnumGenerator extends AbstractGenerator
                 column: $column,
             );
         })
-            ->join(PHP_EOL . '        ');
+            ->join(PHP_EOL . '    ');
     }
 }

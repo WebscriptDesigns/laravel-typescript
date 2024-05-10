@@ -16,15 +16,18 @@ abstract class AbstractGenerator implements Generator
         $this->boot();
 
         $reflectionType = $reflection instanceof ReflectionEnum ? 'enum' : 'interface';
+        $spacing = $reflection instanceof ReflectionEnum ? '' : '    ';
+        $prefix = $spacing . "export";
+        $suffix = $spacing . "}";
 
         if (empty(trim($definition = $this->getDefinition()))) {
-            return "    export $reflectionType {$this->tsClassName()} {}" . PHP_EOL;
+            return "$prefix $reflectionType {$this->tsClassName()} {}" . PHP_EOL;
         }
 
         return <<<TS
-            export $reflectionType {$this->tsClassName()} {
-                $definition
-            }
+        $prefix $reflectionType {$this->tsClassName()} {
+        $spacing    $definition
+        $suffix
 
         TS;
     }
