@@ -77,7 +77,6 @@ class TypeScriptGenerator
     {
         return $reflections->map(fn (ReflectionEnum $reflection) => (new EnumGenerator)->generate($reflection))
             ->whereNotNull()
-            ->whenNotEmpty(fn (Collection $definitions) => $definitions->prepend("declare namespace App.Enums {")->push('}' . PHP_EOL))
             ->join(PHP_EOL);
     }
 
