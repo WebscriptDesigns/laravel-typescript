@@ -29,6 +29,7 @@ class ModelGenerator extends AbstractGenerator
     protected Model $model;
     /** @var Collection<Column> */
     protected Collection $columns;
+    protected array $relationNames;
 
     public function __construct()
     {
@@ -61,17 +62,26 @@ class ModelGenerator extends AbstractGenerator
                 ->getDoctrineSchemaManager()
                 ->listTableColumns($this->model->getConnection()->getTablePrefix() . $this->model->getTable())
         );
+
+        $this->relationNames = $this->getRelationMethods()
+            ->map(function (ReflectionMethod $method) {
+                return Str::snake($method->getName());
+            })
+            ->toArray();
     }
 
     protected function getProperties(): string
     {
-        return $this->columns->map(function (Column $column) {
-            return (string) new TypeScriptProperty(
-                name: $column->getName(),
-                types: $this->getPropertyType($column->getType()->getName()),
-                nullable: !$column->getNotnull()
-            );
+        return $this->columns->filter(function (Column $column) {
+            return !in_array($column->getName(), $this->relationNames);
         })
+            ->map(function (Column $column) {
+                return (string) new TypeScriptProperty(
+                    name: $column->getName(),
+                    types: $this->getPropertyType($column->getType()->getName()),
+                    nullable: !$column->getNotnull()
+                );
+            })
             ->join(PHP_EOL . '        ');
     }
 
