@@ -63,7 +63,12 @@ class ModelGenerator extends AbstractGenerator
                 ->listTableColumns($this->model->getConnection()->getTablePrefix() . $this->model->getTable())
         );
 
+        $duplicateRelationNames = config('typescript.duplicateRelations', []);
+
         $this->relationNames = $this->getRelationMethods()
+            ->filter(function (ReflectionMethod $method) use ($duplicateRelationNames) {
+                return !in_array(Str::snake($method->getName()), $duplicateRelationNames);
+            })
             ->map(function (ReflectionMethod $method) {
                 return Str::snake($method->getName());
             })
