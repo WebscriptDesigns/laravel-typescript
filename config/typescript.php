@@ -22,4 +22,14 @@ return [
     'enumsOutput' => resource_path('js/enums.ts'),
 
     'autoloadDev' => false,
+
+    /**
+     * Properties that match relationship names; i.e. a class
+     * has a property 'venue' and a BelongsTo relationship
+     * 'venue'. By default only one will be generated to avoid
+     * conflicting type validation.
+     */
+    'duplicateRelations' => [
+        // 'venue',
+    ],
 ];
